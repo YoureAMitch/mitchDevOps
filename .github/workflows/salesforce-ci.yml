@@ -7,7 +7,7 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    container: salesforce/cli:latest-slim
+    container: salesforce/cli:2.159.7-slim
     steps:
       - name: 'Checkout source Code'
         uses: actions/checkout@v7
