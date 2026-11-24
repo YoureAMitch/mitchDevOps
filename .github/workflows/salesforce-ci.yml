@@ -1,0 +1,16 @@
+name: Salesforce CI
+
+on:
+  pull_request:
+    branches: [staging]
+
+jobs:
+  validate:
+    runs-on: unbuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-24
+      - run: npm install -g salesforce/cli
+      - run: sf --version
