@@ -2,15 +2,24 @@ name: Salesforce CI
 
 on:
   pull_request:
-    branches: [staging]
+    branches: [staging, main]
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    container: salesforce/cli:latest-slim
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-      - run: npm install -g @salesforce/cli
-      - run: sf --version
+      - name: 'Checkout source Code'
+        uses: actions/checkout@v7
+      
+      - name: 'Authenticating Dev Org'
+        env:
+          SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
+        run: echo "$SFDX_AUTH_URL" | sf org login sfdx-url --sfdx-url-stdin --alias DevOrgCI
+
+      - name: 'Validate Deployment with tests'
+        run: sf project deploy validate --source-dir force-app --target-org DevOrgCI --test-level RunLocalTests --wait 30
+
+
+      
+        
