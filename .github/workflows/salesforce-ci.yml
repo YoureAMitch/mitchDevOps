@@ -19,7 +19,34 @@ jobs:
 
       - name: 'Validate Deployment with tests'
         run: sf project deploy validate --source-dir force-app --target-org DevOrgCI --test-level RunLocalTests --wait 30
+ 
+  code-analyzer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out files
+        uses: actions/checkout@v7
 
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
 
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli@2.159.7
+
+      - name: Install Code Analyzer plugin
+        run: sf plugins install code-analyzer@5.16.0
+
+      - name: Run Salesforce Code Analyzer
+        id: run-code-analyzer
+        uses: forcedotcom/run-code-analyzer@v2
+        with:
+          run-arguments: --workspace force-app --rule-selector pmd --view detail --output-file sfca_results.html --output-file sfca_results.json
+          results-artifact-name: salesforce-code-analyzer-results
+          github-token: ${{ github.token }}
       
-        
+      - name: Fail on Critical/High Violations (Changed Files Only)
+        if: |
+          steps.run-code-analyzer.outputs.num-sev1-violations-in-changed-files > 0 ||
+          steps.run-code-analyzer.outputs.num-sev2-violations-in-changed-files > 0
+        run: exit 1
