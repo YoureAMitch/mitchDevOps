@@ -1,0 +1,41 @@
+name: Claude Code Review
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      
+      - name: Claude PR Review
+        uses: anthropics/claude-code-action@v1
+        with: 
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER ${{ github.event.pull_request.number }}
+
+            This is a Salesforce DX project (Apex, LWC, metadata).
+            Follow the review standards in CLAUDE.md if it exists.
+
+            Review the changes for:
+            1. Apex best practices: bulkification, no SOQL or DML in loops, governor limits
+            2. Security: sharing model, CRUD/FLS, hardcoded IDs or credentials
+            3. Tests: meaningful assertions with messages, bulk and negative cases
+            4. Readability and documentation
+
+            Use inline comments for specific issues.
+            Use one top-level comment for a short overall summary.
+
+            claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
